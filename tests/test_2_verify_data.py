@@ -10,6 +10,7 @@ def test_post():
 
     response = requests.post(url, data=json.dumps(payload))
     response_json = response.json()
+    print(response_json)
     assert response.status_code == 404
     assert response_json['message'] == 'Not Found'
 
@@ -31,14 +32,20 @@ def test_api_post():
     assert response_json['status'] == body['status']
 
 def test_unique_ids():
-    response = requests.get("https://reqres.in/api/users?page=2")
-    ids = [u["id"] for u in response.json()["data"]]
+    response = requests.get("https://api.thecatapi.com/v1/images/search?limit=5")
+
+    ids = [u["id"] for u in response.json()]
     assert len(ids) == len(set(ids)), "Есть дубликаты ID!"
 
-import pytest
-import requests
-
-from data.codes import STATUS_CODE
+STATUS_CODE = [
+    (200, requests.codes.ok),  # OK
+    (300, requests.codes.multiple_choices),  # Multiple Choices
+    (400, requests.codes.bad_request),  # Bad Request
+    (418, requests.codes.im_a_teapot),  # im a teapot
+    (404, requests.codes.not_found),  # Not Found
+    (500, requests.codes.internal_server_error),  # Internal Server Error
+    (511, requests.codes.network_authentication),  # Network Authentication Required
+]
 
 
 def test_text():
@@ -55,14 +62,15 @@ def test_json():
     response = requests.get('https://api.thecatapi.com/v1/images/search?limit=5')
     response_json = response.json()
     assert response.status_code == 200
-    assert response_json[0]['id']
-    assert response_json[0]['height']
-    assert response_json[0]['width']
+    for r in response.json():
+        assert r.get('id')
+        assert r['height']
+        assert r['width']
     assert 'https://cdn2.thecatapi.com/images/' in response_json[0]['url']
 
 
 def test_raise_for_status_200():
-    url = "https://httpbin.org/status/200"
+    url = "https://httpbin.org/status/500"
     r = requests.get(url)
 
     try:
@@ -70,8 +78,7 @@ def test_raise_for_status_200():
         print("Запрос успешен.")
         assert True
     except requests.exceptions.HTTPError as err:
-        print(f"Ошибка HTTP: {err}")
-        assert False
+        assert False, f"Ошибка HTTP: {err}"
 
 
 def test_raise_for_status_500():
@@ -80,11 +87,9 @@ def test_raise_for_status_500():
 
     try:
         r.raise_for_status()
-        print("Запрос успешен.")
-        assert False
+        assert False, "Запрос успешен."
     except requests.exceptions.HTTPError as err:
-        print(f"Ошибка HTTP: {err}")
-        assert True
+        assert True, f"Ошибка HTTP: {err}"
 
 
 @pytest.mark.parametrize("status_code, codes", STATUS_CODE)
@@ -92,3 +97,34 @@ def test_status_codes(status_code, codes):
     response = requests.get(f'https://httpbin.org/status/{status_code}')
 
     assert response.status_code == codes, f"Expected {codes}, but got {response.status_code}"
+
+def test_send_csv_file():
+    text = 'some, data, to, send\nanother, row, to, send\n'
+    url = 'https://httpbin.org/post'
+    files = {'file': ('report.csv', text)}
+    response = requests.post(url, files=files)
+    response_json = response.json()
+    print(response_json)
+    assert response_json['files']['file'] == text
+
+
+def test_send_image():
+    url = 'https://petstore.swagger.io/v2/pet/1/uploadImage'
+    with open('/Users/elenayanushevskaya/QAP/otus-api-testing/files/expected_image.png', 'rb') as fp:
+        files = {'file': ('img.png', fp, 'image/png', {'Expires': '0'})}
+        response = requests.post(url, files=files)
+
+    assert response.status_code == requests.codes.ok
+    assert 'File uploaded to' in response.text
+
+
+def test_get_file():
+    url = 'https://httpbin.org/image/png'
+    response = requests.get(url)
+    content = response.content
+    assert response.status_code == 200
+
+    with open('/Users/elenayanushevskaya/QAP/otus-api-testing/files/expected_image.png', 'rb') as local_file:
+        local_file_content = local_file.read()
+
+    assert content == local_file_content, "Files are not identical"

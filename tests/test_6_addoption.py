@@ -4,6 +4,6 @@ import requests
 import logging
 
 
-def test_get_addoption(locale, url, project, base_url):
+def test_get_addoption(locale, project, base_url):
     assert locale == 'en'
-    assert url == 'en'
+    assert project == 'terminal'

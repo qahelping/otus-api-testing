@@ -1,6 +1,9 @@
+import os
+
 import pytest
 
-# python -m pytest  --project=terminal --locale=en
+# python -m pytest  --project=terminal  --locale=en
+# LOCALE=en python -m pytest  --project=terminal
 def pytest_addoption(parser):
     parser.addoption(
         "--url",
@@ -21,7 +24,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session")
 def locale(pytestconfig):
-    return pytestconfig.getoption("--locale") or os.getenv("LOCALE")
+    return pytestconfig.getoption("--locale")
 
 
 @pytest.fixture(scope="session")
@@ -32,4 +35,4 @@ def project(pytestconfig):
 
 @pytest.fixture
 def base_url(request):
-    print(request.config.getoption("--url"))
+    return request.config.getoption("--url")

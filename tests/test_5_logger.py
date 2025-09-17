@@ -13,7 +13,7 @@ def create_logger():
     console_handler.setLevel(logging.DEBUG)
 
     # Создаем обработчик для записи логов в файл
-    file_handler = logging.FileHandler('../log.log')
+    file_handler = logging.FileHandler('log.log')
     file_handler.setLevel(logging.INFO)
 
     # Форматирование логов
@@ -31,11 +31,11 @@ def create_logger():
 logger = create_logger()
 
 @pytest.mark.parametrize("status_code", [
-    200,  # OK
-    300,  # Multiple Choices
-    400,  # Bad Request
+    # 200,  # OK
+    # 300,  # Multiple Choices
+    # 400,  # Bad Request
     404,  # Not Found
-    500  # Internal Server Error
+    # 500  # Internal Server Error
 ])
 def test_logger(status_code):
     url = f'https://httpbin.org/status/{status_code}'

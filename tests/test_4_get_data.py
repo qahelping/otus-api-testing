@@ -1,24 +1,21 @@
 import csv
+import os
+from datetime import datetime, timedelta
 
 import pytest
+import requests
 from allpairspy import AllPairs
 
-def get_path(filename: str):
-    return os.path.join(FILES_DIR, filename)
+FILES_DIR = os.path.dirname(__file__)
 
 
-CSV_FILE_PATH = get_path(filename="auth_endpoints.csv")
-
-
-def get_auth_endpoints():
-    with open(CSV_FILE_PATH, "r") as f:
+def get_data_from_csv():
+    with open("/Users/elenayanushevskaya/QAP/otus-api-testing/files/auth_endpoints.csv", "r") as f:
         reader = csv.reader(f)
         next(reader)
         for el in reader:
             yield el
 
-
-auth_endpoints = get_auth_endpoints()
 
 parametrs = [
     ['Windows', 'MacOs', "Linux"],
@@ -27,6 +24,16 @@ parametrs = [
 ]
 
 
+def test_params():
+    param = {'limit': '1'}
+    response = requests.get('https://api.thecatapi.com/v1/images/search', params=param)
+    assert response.status_code == 200
+
+
+def test_query_params():
+    limit = '5'
+    response = requests.get(f'https://api.thecatapi.com/v1/images/search?limit={limit}')
+    assert response.status_code == 200
 
 @pytest.mark.parametrize(["os", "browser", "lang"], [values for values in AllPairs(parametrs)])
 def test_allpairspy(os, browser, lang):
@@ -36,36 +43,19 @@ def id_val(val):
     return val[0]
 
 
-auth_endpoints = get_data_from_csv("../files/auth_endpoints.csv")
+auth_endpoints = get_data_from_csv()
 
 
 @pytest.mark.parametrize("data", auth_endpoints, ids=id_val)
 def test_with_generator(data):
     assert data[0] == 'login'
 
+testdata = [
+    (datetime(2001, 12, 12), datetime(2001, 12, 11), timedelta(1)),
+    (datetime(2001, 12, 11), datetime(2001, 12, 12), timedelta(-1)),
+]
 
-data = get_data_from_json("../files/file.json")
-
-
-class Player(BaseModel):
-    name: str
-    rank: int
-    gold: str
-    dead: bool
-
-
-@pytest.mark.parametrize("data", data)
-def test_json(data):
-    print(data)
-    assert data['name'] in ('Dominator', 'TheKiller', 'Vasya666', 'Cheater')
-
-
-@pytest.mark.parametrize("data", data)
-def test_json_2(data):
-    obj = {
-        "name": "Dominator",
-        "rank": 1,
-        "gold": "100000",
-        "dead": False
-    },
-    player = Player.model_validate_json(obj)
+@pytest.mark.parametrize("a,b,expected", testdata, ids=["forward", "backward"])
+def test_timedistance_v1(a, b, expected):
+    diff = a - b
+    assert diff == expected

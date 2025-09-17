@@ -8,15 +8,16 @@ def test_get():
 
 
 def test_simple_example():
-    url = "https://reqres.in/api/{resource}?page=1&per_page=1"
+    url = "https://reqres.in/api/"
 
     response_1 = requests.request("GET", url)
-    response_2 = requests.get(url)
+    response_2 = requests.post(url)
 
-    assert 'cerulean' in response_1.text
+    assert 'name' in response_1.text
+    assert response_1.status_code == 200
     print(response_1.text)
 
-    assert 'cerulean' in response_2.text
+    assert response_2.status_code == 401
     print(response_2.text)
 
 def test_post():

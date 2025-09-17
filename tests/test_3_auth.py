@@ -10,6 +10,8 @@ def test_simple_auth():
     response = requests.get(url, auth=('user', 'password'))
 
     assert response.status_code == 200
+    assert response.json().get('authenticated') == True
+    assert response.json().get('user') == 'user'
 
 @pytest.fixture
 def token():
@@ -26,8 +28,8 @@ def token():
     yield response_json['access_token']
 
 
-def test_jwt_token(token, base_url):
-    url_data = base_url
+def test_jwt_token(token):
+    url_data = 'https://jwt.qa.studio/api/v1/jwt/data'
 
     headers = {'accept': 'application/json', 'Authorization': f'Bearer {token}'}
 
@@ -35,9 +37,21 @@ def test_jwt_token(token, base_url):
 
     response_data_json = response_data.json()
     print(response_data_json['success'])
-    assert response_data_json['success'] != "my secure data"
+    assert response_data_json['success'] == "my secure data"
     assert response_data.status_code == 200
 
+
+def test_jwt_token_failed():
+    url_data = 'https://jwt.qa.studio/api/v1/jwt/data'
+
+    headers = {'accept': 'application/json'}
+
+    response_data = requests.get(url_data, headers=headers)
+
+    response_data_json = response_data.json()
+    assert response_data.status_code == 200
+    assert response_data_json['success'] == "my secure data"
+    assert response_data.status_code == 200
 
 
 
