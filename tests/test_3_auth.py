@@ -13,6 +13,7 @@ def test_simple_auth():
     assert response.json().get('authenticated') == True
     assert response.json().get('user') == 'user'
 
+# https://jwt.qa.studio/api/v1/docs
 @pytest.fixture
 def token():
     url_token = 'https://jwt.qa.studio/api/v1/jwt/token'
@@ -34,6 +35,7 @@ def test_jwt_token(token):
     headers = {'accept': 'application/json', 'Authorization': f'Bearer {token}'}
 
     response_data = requests.get(url_data, headers=headers)
+
 
     response_data_json = response_data.json()
     print(response_data_json['success'])

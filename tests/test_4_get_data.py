@@ -24,16 +24,6 @@ parametrs = [
 ]
 
 
-def test_params():
-    param = {'limit': '1'}
-    response = requests.get('https://api.thecatapi.com/v1/images/search', params=param)
-    assert response.status_code == 200
-
-
-def test_query_params():
-    limit = '5'
-    response = requests.get(f'https://api.thecatapi.com/v1/images/search?limit={limit}')
-    assert response.status_code == 200
 
 @pytest.mark.parametrize(["os", "browser", "lang"], [values for values in AllPairs(parametrs)])
 def test_allpairspy(os, browser, lang):

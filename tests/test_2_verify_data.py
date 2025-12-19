@@ -2,6 +2,7 @@ import json
 
 import pytest
 import requests
+from requests import HTTPError
 
 
 def test_post():
@@ -13,6 +14,8 @@ def test_post():
     print(response_json)
     assert response.status_code == 404
     assert response_json['message'] == 'Not Found'
+    assert response_json['documentation_url'] == "https://docs.github.com/rest"
+    assert response_json['status'] == "404"
 
 
 def test_api_post():
@@ -62,6 +65,7 @@ def test_json():
     response = requests.get('https://api.thecatapi.com/v1/images/search?limit=5')
     response_json = response.json()
     assert response.status_code == 200
+    print(response.json())
     for r in response.json():
         assert r.get('id')
         assert r['height']
@@ -85,6 +89,9 @@ def test_raise_for_status_500():
     url = "https://httpbin.org/status/500"
     r = requests.get(url)
 
+    with pytest.raises(HTTPError):
+        r.raise_for_status()
+
     try:
         r.raise_for_status()
         assert False, "Запрос успешен."
@@ -104,7 +111,6 @@ def test_send_csv_file():
     files = {'file': ('report.csv', text)}
     response = requests.post(url, files=files)
     response_json = response.json()
-    print(response_json)
     assert response_json['files']['file'] == text
 
 
