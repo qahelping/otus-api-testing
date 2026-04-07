@@ -17,6 +17,25 @@ def test_post():
     assert response_json['documentation_url'] == "https://docs.github.com/rest"
     assert response_json['status'] == "404"
 
+@pytest.mark.only
+def test_get_public_users():
+    url = 'http://localhost:8000/users/public'
+    response = requests.get(url)
+
+    res_json = response.json()
+
+    assert response.status_code == 200
+    assert len(res_json) == 8
+
+    user = res_json[0]
+    assert user['id'] == 1
+    assert user['username'] == 'admin'
+    assert user['email'] == 'admin@example.com'
+    assert user['role'] == 'admin'
+    assert user['avatar_url'] is None
+    assert user['created_at'] == '2026-03-21T18:29:46.421065'
+
+
 
 def test_api_post():
     body = {

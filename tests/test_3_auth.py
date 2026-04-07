@@ -1,7 +1,29 @@
 import json
+from os import access
 
 import pytest
 import requests
+
+
+def test_login():
+    body = {"email": "charlie@example.com", "password": "password123"}
+    response = requests.post('http://localhost:8000/auth/login', data=json.dumps(body))
+    assert response.status_code == 200
+
+    access_token = response.json().get('access_token')
+
+    headers = {'Authorization': f'Bearer {access_token}'}
+    response = requests.get('http://localhost:8000/users/me', headers=headers)
+
+    assert response.status_code == 200
+
+    user = response.json()
+    assert user['id'] == 4
+    assert user['username'] == 'charlie'
+    assert user['email'] == 'charlie@example.com'
+    assert user['role'] == 'user'
+    assert user['avatar_url'] is None
+    assert user['created_at'] == '2026-03-16T18:29:46.995703'
 
 
 def test_simple_auth():

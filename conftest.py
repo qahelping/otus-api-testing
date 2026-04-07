@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-# python -m pytest  --project=terminal  --locale=en
+# python -m pytest  --project=terminal  --locale=en -m add
 # LOCALE=en python -m pytest  --project=terminal
 def pytest_addoption(parser):
     parser.addoption(

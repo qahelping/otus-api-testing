@@ -1,5 +1,38 @@
+import json
+
 import pytest
 import requests
+
+
+@pytest.mark.only
+def test_get_public_user_with_skip():
+    url = 'http://localhost:8000/users/public'
+    response = requests.get(url)
+    res_json = response.json()
+
+    count_of_users = len(res_json)
+
+    url = 'http://localhost:8000/users/public'
+
+    params = {'skip': '5'}
+    response = requests.get(url, params=params)
+
+    res_json =  response.json()
+
+    assert response.status_code == 200
+    assert len(res_json) == count_of_users - 5
+
+
+def test_login():
+    body = {"email": "charlie@example.com", "password": "password123"}
+    response = requests.post('http://localhost:8000/auth/login', data=json.dumps(body))
+
+    assert response.status_code == 200
+
+    res_json = response.json()
+
+    assert res_json.get('access_token')
+    assert res_json.get('token_type') == 'bearer'
 
 
 def test_params():
@@ -23,7 +56,7 @@ def test_simple_example():
     url = "https://reqres.in/api/"
 
     response_1 = requests.request("GET", url)
-    # response_2 = requests.post(url)
+    # response_2 = requests.get(url)
 
     assert 'name' in response_1.text
     assert response_1.status_code == 200
@@ -31,7 +64,8 @@ def test_simple_example():
 
     # assert response_2.status_code == 401
     # print(response_2.text)
-@pytest.mark.only
+
+# @pytest.mark.only
 def test_post():
     response = requests.post('https://httpbin.org/post', data={'key': 'value'})
     res_json = response.json()
