@@ -4,9 +4,12 @@ import os
 import pytest
 import requests
 from dotenv import load_dotenv
-from faker import Faker
 
 from example_gorest.http_client import HttpClient
+from example_gorest.user_service import UserService
+from models.user import UserResponse
+from test_data.generate_user import generate_random_user, generate_user_with_empty_field, \
+    users_required_fields_testdata, USER_8517587
 
 load_dotenv()
 
@@ -34,7 +37,6 @@ def test_public_v2_users():
 
 @pytest.mark.api_2
 def test_public_v2_create_users():
-    fake = Faker()
     url = 'https://gorest.co.in/public/v2/users'
 
     headers = {
@@ -44,12 +46,7 @@ def test_public_v2_create_users():
 
     }
 
-    body = {
-        "name": fake.name(),
-        "email": fake.email(),
-        "gender": "male",
-        "status": "active"
-    }
+    body = generate_random_user()
     response = requests.post(url, data=json.dumps(body), headers=headers)
 
     response_json = response.json()
@@ -88,5 +85,64 @@ def test_public_v2_users_http_client():
     http_client = HttpClient()
     response = http_client.get(path)
 
-    assert isinstance(response, dict)
-    assert response == user
+    user_response = UserResponse(**response)
+
+    print(user_response)
+    breakpoint()
+    assert user_response == UserResponse(**user)
+
+
+@pytest.mark.api_6
+def test_public_v2_users_user_service():
+    user_response = UserService().get_user('8517587')
+
+    assert user_response == UserResponse(**USER_8517587)
+
+
+@pytest.mark.api_4
+@pytest.mark.parametrize("filed, expected", users_required_fields_testdata)
+def test_public_v2_create_users_required_fields(filed, expected):
+    url = 'https://gorest.co.in/public/v2/users'
+
+    headers = {
+        'Authorization': f'Bearer 1{GORES_TOKEN}',
+        'Accept': 'application/json',
+        'Content-type': 'application/json'
+
+    }
+
+    body = generate_user_with_empty_field(filed)
+    response = requests.post(url, data=json.dumps(body), headers=headers)
+
+    response_json = response.json()
+    assert response.status_code == 422
+    assert response_json == expected
+
+
+healthcheck_token_testdata = [
+    ('public/v2/users', 'GET', 401),
+    ('public/v2/users/1', 'GET', 401),
+    ('public/v2/users', 'POST', 401),
+    ('public/v2/users/1', 'PUT', 401)
+]
+
+INVALID_GORES_TOKEN = '1234resasdfv'
+
+
+@pytest.mark.api_4
+@pytest.mark.parametrize("path, method, status_code", healthcheck_token_testdata)
+def test_gorest_healthcheck_token(path, method, status_code):
+    url = f'https://gorest.co.in/{path}'
+
+    headers = {
+        'Authorization': f'Bearer {INVALID_GORES_TOKEN}',
+        'Accept': 'application/json',
+        'Content-type': 'application/json'
+    }
+
+    body = generate_random_user()
+    response = requests.request(method, url, data=json.dumps(body), headers=headers)
+
+    response_json = response.json()
+    assert response.status_code == status_code
+    assert response_json == {"message": "Invalid token"}
